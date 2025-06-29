@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "kufar-to-telegram": {
+      "commandName": "Project"
+    },
+    "Container (Dockerfile)": {
+      "commandName": "Docker"
+    }
+  }
+}
