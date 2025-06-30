@@ -10,12 +10,12 @@ namespace TelegramTestProject.Jobs
     {
         private readonly ILogger<KyfarCheckerJob> _logger;
         private readonly KufarParser _parser;
-        private readonly TelegramNotifier _notifier;
+        private readonly TelegramNotify _notifier;
 
         public KyfarCheckerJob(
             ILogger<KyfarCheckerJob> logger,
             KufarParser parser,
-            TelegramNotifier notifier)
+            TelegramNotify notifier)
         {
             _logger = logger;
             _parser = parser;
@@ -30,7 +30,11 @@ namespace TelegramTestProject.Jobs
 
                 var oldAds = await _parser.ExtractAdsAsync();
                 var newAds = await _parser.ExtractAdsAsync();
-                var newItems = CompareAds(oldAds, newAds);
+                var newItems = newAds.Take(3).ToList();
+
+                //var oldAds = await _parser.ExtractAdsAsync();
+                //var newAds = await _parser.ExtractAdsAsync();
+                //var newItems = CompareAds(oldAds, newAds);
 
                 if (newItems.Any())
                 {
@@ -84,16 +88,32 @@ namespace TelegramTestProject.Jobs
             return JsonSerializer.Serialize(d.OrderBy(x => x.Key).ToDictionary(x => x.Key, x => x.Value));
         }
 
+        //private static string FormatAdMessage(Dictionary<string, object> ad)
+        //{
+        //    var parts = new List<string> { $"{ad["subject"]}", $"Цена: {ad["price_byn"]} BYN" };
+
+        //    AddPartIfExists(ad, "ad_processor", "Проц: {0}", parts);
+        //    AddPartIfExists(ad, "ad_ram", "ОЗУ: {0}", parts);
+        //    AddPartIfExists(ad, "ad_display", "Диагональ: {0}", parts);
+        //    AddPartIfExists(ad, "ad_disk_type", "Диск: {0}", parts);
+        //    AddPartIfExists(ad, "ad_disk_volume", "Объем: {0}", parts);
+        //    AddPartIfExists(ad, "ad_battery", "АКБ: {0}", parts);
+
+        //    parts.Add($"Ссылка: {ad["ad_link"]}");
+        //    return string.Join("\n", parts);
+        //}
+
         private static string FormatAdMessage(Dictionary<string, object> ad)
         {
             var parts = new List<string> { $"{ad["subject"]}", $"Цена: {ad["price_byn"]} BYN" };
 
-            AddPartIfExists(ad, "ad_processor", "Проц: {0}", parts);
-            AddPartIfExists(ad, "ad_ram", "ОЗУ: {0}", parts);
-            AddPartIfExists(ad, "ad_display", "Диагональ: {0}", parts);
-            AddPartIfExists(ad, "ad_disk_type", "Диск: {0}", parts);
-            AddPartIfExists(ad, "ad_disk_volume", "Объем: {0}", parts);
-            AddPartIfExists(ad, "ad_battery", "АКБ: {0}", parts);
+            //AddPartIfExists(ad, "ad_processor", "Проц: {0}", parts);
+            //AddPartIfExists(ad, "ad_ram", "ОЗУ: {0}", parts);
+            //AddPartIfExists(ad, "ad_display", "Диагональ: {0}", parts);
+            //AddPartIfExists(ad, "ad_disk_type", "Диск: {0}", parts);
+            //AddPartIfExists(ad, "ad_disk_volume", "Объем: {0}", parts);
+            //AddPartIfExists(ad, "ad_battery", "АКБ: {0}", parts);
+            AddPartIfExists(ad, "ad_rooms", "Комнат: {0}", parts);
 
             parts.Add($"Ссылка: {ad["ad_link"]}");
             return string.Join("\n", parts);

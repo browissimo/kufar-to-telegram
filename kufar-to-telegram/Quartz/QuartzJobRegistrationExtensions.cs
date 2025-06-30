@@ -12,9 +12,9 @@ namespace MPBot.Services.Quartz
             //services.AddSingleton<IJob, KyfarCheckerJob>();
             services.AddSingleton(new JobSchedule(
                 jobType: typeof(KyfarCheckerJob),
-                //cronExpression: "15 * * * * ?"
-                cronExpression: "0 15 * * * ?"
-            //cronExpression: "1 * * * * ?"
+                cronExpression: "15 * * * * ?"
+                //cronExpression: "0 15 * * * ?"
+                //cronExpression: "1 * * * * ?"
             ));
         }
     }

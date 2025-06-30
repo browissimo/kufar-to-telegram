@@ -107,7 +107,8 @@ namespace KufarParserApp.Kufar
                     ["subject"] = adElement.GetProperty("subject").GetString() ?? string.Empty,
                     ["price_byn"] = (adElement.GetProperty("price_byn").GetString() ?? "")
                         .Replace("р.", "").Trim(),
-                    ["ad_link"] = adElement.GetProperty("ad_link").GetString() ?? string.Empty
+                    ["ad_link"] = adElement.GetProperty("ad_link").GetString() ?? string.Empty,
+                    ["list_time"] = adElement.GetProperty("list_time").GetString() ?? string.Empty
                 };
 
                 ProcessImages(adElement, result);
