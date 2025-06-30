@@ -14,12 +14,6 @@ namespace KufarParserApp.Kufar
 
         private static readonly Dictionary<string, string> _keyMapping = new()
         {
-            //["Процессор"] = "ad_processor",
-            //["Оперативная память"] = "ad_ram",
-            //["Диагональ экрана"] = "ad_display",
-            //["Тип накопителя"] = "ad_disk_type",
-            //["Ёмкость накопителя"] = "ad_disk_volume",
-            //["Время автономной работы"] = "ad_battery"
             ["Комнат"] = "ad_rooms"
         };
 

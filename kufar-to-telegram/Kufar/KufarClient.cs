@@ -11,7 +11,6 @@ namespace KufarParserApp.Kufar
     public class KufarClient
     {
         private const string BaseUrl = "https://searchapi.kufar.by/v1/search/rendered-paginated";
-        private readonly string _countUrl;
         private readonly HttpClient _httpClient;
         private readonly ILogger<KufarClient> _logger;
         private readonly Dictionary<string, List<string>> _params;
@@ -20,10 +19,8 @@ namespace KufarParserApp.Kufar
         {
             _params = configuration.GetSection("SearchParams")
                 .Get<Dictionary<string, List<string>>>() ?? throw new ArgumentNullException("SearchParams configuration is missing");
-            _httpClient = new HttpClient();
+            _httpClient = new HttpClient {Timeout = TimeSpan.FromSeconds(10) };
             _logger = logger;
-            _countUrl = BaseUrl.Replace("rendered-paginated", "count");
-            _httpClient.Timeout = TimeSpan.FromSeconds(10);
         }
 
         public async Task<JsonDocument?> FetchPageAsync(string? cursor = null)
@@ -45,26 +42,6 @@ namespace KufarParserApp.Kufar
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Ошибка запроса страницы");
-                return null;
-            }
-        }
-
-        public async Task<int?> FetchCountAsync()
-        {
-            try
-            {
-                var uri = BuildUriWithQuery(_countUrl, _params);
-                var response = await _httpClient.GetAsync(uri);
-                response.EnsureSuccessStatusCode();
-
-                using var doc = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync());
-                return doc.RootElement.TryGetProperty("count", out var countProp)
-                    ? countProp.GetInt32()
-                    : null;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Ошибка получения количества объявлений");
                 return null;
             }
         }
