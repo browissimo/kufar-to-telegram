@@ -5,27 +5,70 @@ namespace KufarParserApp.Models
 {
     public class HomesModel
     {
+        [JsonPropertyName("account_id")]
         public int AccountId { get; set; }
+
+        [JsonPropertyName("account_parameters")]
         public AccountParameter[] AccountParameters { get; set; } = Array.Empty<AccountParameter>();
+
+        [JsonPropertyName("ad_id")]
         public int AdId { get; set; }
+
+        [JsonPropertyName("ad_link")]
         public string AdLink { get; set; } = string.Empty;
+
+        [JsonPropertyName("ad_parameters")]
         public AdParameter[] AdParameters { get; set; } = Array.Empty<AdParameter>();
+
+        [JsonPropertyName("body")]
         public string? Body { get; set; }
+
+        [JsonPropertyName("body_short")]
         public string BodyShort { get; set; } = string.Empty;
+
+        [JsonPropertyName("category")]
         public string Category { get; set; } = string.Empty;
+
+        [JsonPropertyName("company_ad")]
         public bool CompanyAd { get; set; }
+
+        [JsonPropertyName("currency")]
         public string Currency { get; set; } = string.Empty;
+
+        [JsonPropertyName("images")]
         public Image[] Images { get; set; } = Array.Empty<Image>();
+
+        [JsonPropertyName("list_id")]
         public int ListId { get; set; }
+
+        [JsonPropertyName("list_time")]
         public DateTime ListTime { get; set; }
+
+        [JsonPropertyName("message_id")]
         public string MessageId { get; set; } = string.Empty;
+
+        [JsonPropertyName("paid_services")]
         public PaidServices PaidServices { get; set; } = new();
+
+        [JsonPropertyName("phone_hidden")]
         public bool PhoneHidden { get; set; }
+
+        [JsonPropertyName("price_byn")]
         public string PriceByn { get; set; } = string.Empty;
+
+        [JsonPropertyName("price_usd")]
         public string PriceUsd { get; set; } = string.Empty;
+
+        [JsonPropertyName("remuneration_type")]
         public string RemunerationType { get; set; } = string.Empty;
+
+        [JsonPropertyName("show_parameters")]
         public ShowParameters ShowParameters { get; set; } = new();
+
+        [JsonPropertyName("subject")]
         public string Subject { get; set; } = string.Empty;
+
+        [JsonPropertyName("type")]
         public string Type { get; set; } = string.Empty;
     }
 

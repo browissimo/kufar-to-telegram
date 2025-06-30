@@ -1,8 +1,8 @@
 ﻿using KufarParserApp.Kufar;
+using KufarParserApp.Models;
 using KufarParserApp.Telegram;
 using Microsoft.Extensions.Logging;
 using Quartz;
-using System.Text.Json;
 
 namespace TelegramTestProject.Jobs
 {
@@ -28,13 +28,8 @@ namespace TelegramTestProject.Jobs
             {
                 _logger.LogInformation("🚀 Парсер запущен");
 
-                var oldAds = await _parser.ExtractAdsAsync();
                 var newAds = await _parser.ExtractAdsAsync();
                 var newItems = newAds.Take(3).ToList();
-
-                //var oldAds = await _parser.ExtractAdsAsync();
-                //var newAds = await _parser.ExtractAdsAsync();
-                //var newItems = CompareAds(oldAds, newAds);
 
                 if (newItems.Any())
                 {
@@ -52,12 +47,14 @@ namespace TelegramTestProject.Jobs
             }
         }
 
-        private async Task ProcessAdAsync(Dictionary<string, object> ad)
+        private async Task ProcessAdAsync(HomesModel ad)
         {
             try
             {
                 var message = FormatAdMessage(ad);
-                if (ad.TryGetValue("image_urls", out var images) && images is List<string> imageUrls)
+                var imageUrls = ExtractImageUrls(ad);
+
+                if (imageUrls.Any())
                 {
                     await _notifier.SendPhotosAsync(imageUrls, message);
                 }
@@ -72,63 +69,53 @@ namespace TelegramTestProject.Jobs
             }
         }
 
-        private static List<Dictionary<string, object>> CompareAds(
-            List<Dictionary<string, object>> oldAds,
-            List<Dictionary<string, object>> newAds)
+        private static List<string> ExtractImageUrls(HomesModel ad)
         {
-            var oldSet = oldAds.Select(DictToHashable).ToHashSet();
-            var newSet = newAds.Select(DictToHashable).ToHashSet();
-            return newSet.Except(oldSet)
-                .Select(x => JsonSerializer.Deserialize<Dictionary<string, object>>(x)!)
-                .ToList();
+            return ad.Images?
+                .Where(i => !string.IsNullOrEmpty(i?.Path))
+                .Select(i => $"https://rms.kufar.by/v1/list_thumbs_2x/{i.Path}")
+                .ToList()
+                ?? new List<string>();
         }
 
-        private static string DictToHashable(Dictionary<string, object> d)
+        private static string FormatAdMessage(HomesModel ad)
         {
-            return JsonSerializer.Serialize(d.OrderBy(x => x.Key).ToDictionary(x => x.Key, x => x.Value));
-        }
+            var parts = new List<string>();
 
-        //private static string FormatAdMessage(Dictionary<string, object> ad)
-        //{
-        //    var parts = new List<string> { $"{ad["subject"]}", $"Цена: {ad["price_byn"]} BYN" };
+            //if (!string.IsNullOrWhiteSpace(ad.Subject))
+            //    parts.Add(ad.Subject);
 
-        //    AddPartIfExists(ad, "ad_processor", "Проц: {0}", parts);
-        //    AddPartIfExists(ad, "ad_ram", "ОЗУ: {0}", parts);
-        //    AddPartIfExists(ad, "ad_display", "Диагональ: {0}", parts);
-        //    AddPartIfExists(ad, "ad_disk_type", "Диск: {0}", parts);
-        //    AddPartIfExists(ad, "ad_disk_volume", "Объем: {0}", parts);
-        //    AddPartIfExists(ad, "ad_battery", "АКБ: {0}", parts);
+            //if (!string.IsNullOrWhiteSpace(ad.BodyShort))
+            //    parts.Add(ad.BodyShort);
 
-        //    parts.Add($"Ссылка: {ad["ad_link"]}");
-        //    return string.Join("\n", parts);
-        //}
+            if(!string.IsNullOrWhiteSpace(ad.Subject))
+                parts.Add(ad.BodyShort);
+            else if (!string.IsNullOrWhiteSpace(ad.BodyShort))
+                parts.Add(ad.Subject);
 
-        private static string FormatAdMessage(Dictionary<string, object> ad)
-        {
-            var parts = new List<string> { $"{ad["subject"]}", $"Цена: {ad["price_byn"]} BYN" };
+            if (!string.IsNullOrWhiteSpace(ad.PriceUsd))
+                parts.Add($"Цена: {ad.PriceUsd[..^2]} USD");
 
-            //AddPartIfExists(ad, "ad_processor", "Проц: {0}", parts);
-            //AddPartIfExists(ad, "ad_ram", "ОЗУ: {0}", parts);
-            //AddPartIfExists(ad, "ad_display", "Диагональ: {0}", parts);
-            //AddPartIfExists(ad, "ad_disk_type", "Диск: {0}", parts);
-            //AddPartIfExists(ad, "ad_disk_volume", "Объем: {0}", parts);
-            //AddPartIfExists(ad, "ad_battery", "АКБ: {0}", parts);
-            AddPartIfExists(ad, "ad_rooms", "Комнат: {0}", parts);
+            var squarePrice = ad.AdParameters?.FirstOrDefault(p => p.P == "square_meter")?.V;
+            if (!string.IsNullOrWhiteSpace(squarePrice?.ToString()))
+                parts.Add($"Цена за метр: {squarePrice}");
 
-            parts.Add($"Ссылка: {ad["ad_link"]}");
+            var size = ad.AdParameters?.FirstOrDefault(p => p.P == "size")?.V;
+            if (!string.IsNullOrWhiteSpace(size?.ToString()))
+                parts.Add($"Общая площадь: {size}");
+
+            var sizeLivingPlace = ad.AdParameters?.FirstOrDefault(p => p.P == "size_living_space")?.V;
+            if (!string.IsNullOrWhiteSpace(sizeLivingPlace?.ToString()))
+                parts.Add($"Жилая площадь: {sizeLivingPlace}");
+
+            var rooms = ad.AdParameters?.FirstOrDefault(p => p.Pl == "Комнат")?.Vl;
+            if (!string.IsNullOrWhiteSpace(rooms?.ToString()))
+                parts.Add($"Комнат: {rooms}");
+
+            if (!string.IsNullOrWhiteSpace(ad.AdLink))
+                parts.Add($"Ссылка: {ad.AdLink}");
+
             return string.Join("\n", parts);
-        }
-
-        private static void AddPartIfExists(
-            Dictionary<string, object> ad,
-            string key,
-            string format,
-            List<string> parts)
-        {
-            if (ad.TryGetValue(key, out var value) && value != null)
-            {
-                parts.Add(string.Format(format, value));
-            }
         }
     }
 }
