@@ -1,8 +1,10 @@
 ﻿using KufarParserApp.Kufar;
 using KufarParserApp.Models;
+using KufarParserApp.Storage;
 using KufarParserApp.Telegram;
 using Microsoft.Extensions.Logging;
 using Quartz;
+using Telegram.Bot.Types;
 
 namespace TelegramTestProject.Jobs
 {
@@ -11,6 +13,7 @@ namespace TelegramTestProject.Jobs
         private readonly ILogger<KyfarCheckerJob> _logger;
         private readonly KufarParser _parser;
         private readonly TelegramNotify _notifier;
+        private readonly LastCheckedStore _store;
 
         public KyfarCheckerJob(
             ILogger<KyfarCheckerJob> logger,
@@ -20,6 +23,7 @@ namespace TelegramTestProject.Jobs
             _logger = logger;
             _parser = parser;
             _notifier = notifier;
+            _store = new LastCheckedStore("last_checked.txt");
         }
 
         public async Task Execute(IJobExecutionContext context)
@@ -28,18 +32,27 @@ namespace TelegramTestProject.Jobs
             {
                 _logger.LogInformation("🚀 Парсер запущен");
 
-                var newAds = await _parser.ExtractAdsAsync();
-                var newItems = newAds.Take(3).ToList();
+                var allAds = await _parser.ExtractAdsAsync();
+                var lastChecked = await _store.LoadLastCheckedAsync();
 
-                if (newItems.Any())
+                var newAds = allAds
+                    .Where(ad => ad.ListTime > lastChecked)
+                    .OrderByDescending(ad => ad.ListTime)
+                    .ToList();
+
+                if (newAds.Any())
                 {
-                    _logger.LogInformation("Найдено новых объявлений: {Count}", newItems.Count);
+                    _logger.LogInformation("Найдено новых объявлений: {Count}", newAds.Count);
+                    lastChecked = newAds.Max(ad => ad.ListTime);
+
+                    foreach (var ad in newAds)
+                    {
+                        await ProcessAdAsync(ad);
+                    }
+
+                    await _store.SaveLastCheckedAsync(lastChecked.Value);
                 }
 
-                foreach (var ad in newItems)
-                {
-                    await ProcessAdAsync(ad);
-                }
             }
             catch (Exception ex)
             {
@@ -81,12 +94,6 @@ namespace TelegramTestProject.Jobs
         private static string FormatAdMessage(HomesModel ad)
         {
             var parts = new List<string>();
-
-            //if (!string.IsNullOrWhiteSpace(ad.Subject))
-            //    parts.Add(ad.Subject);
-
-            //if (!string.IsNullOrWhiteSpace(ad.BodyShort))
-            //    parts.Add(ad.BodyShort);
 
             if(!string.IsNullOrWhiteSpace(ad.Subject))
                 parts.Add(ad.BodyShort);
