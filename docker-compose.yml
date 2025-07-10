@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  kufar-to-telegram:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kufar-to-telegram
+    restart: always
+    ports:
+      - "8080:11119"  # если приложение слушает 11119
+    networks:
+      - kufar-net
+    environment:
+      # Добавь свои переменные, если есть:
+      # - TELEGRAM_BOT_TOKEN=...
+      # - KU_FAR_SEARCH_URL=...
+      - DOTNET_ENVIRONMENT=Production
+
+networks:
+  kufar-net:
+    driver: bridge

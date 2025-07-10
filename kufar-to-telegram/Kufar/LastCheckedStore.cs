@@ -22,7 +22,7 @@ namespace KufarParserApp.Storage
             if (DateTime.TryParse(content, out var dt))
                 return dt;
 
-            return new DateTime(2025, 6, 30); ;
+            return new DateTime(2025, 7, 10); ;
         }
 
         public async Task SaveLastCheckedAsync(DateTime dateTime)

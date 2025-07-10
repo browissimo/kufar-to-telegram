@@ -8,6 +8,7 @@ using Telegram.Bot.Types;
 
 namespace TelegramTestProject.Jobs
 {
+    [DisallowConcurrentExecution]
     public class KyfarCheckerJob : IJob
     {
         private readonly ILogger<KyfarCheckerJob> _logger;
@@ -34,6 +35,7 @@ namespace TelegramTestProject.Jobs
 
                 var allAds = await _parser.ExtractAdsAsync();
                 var lastChecked = await _store.LoadLastCheckedAsync();
+                _logger.LogInformation($"Получена дата последней проверки: {lastChecked}");
 
                 var newAds = allAds
                     .Where(ad => ad.ListTime > lastChecked)
@@ -51,6 +53,7 @@ namespace TelegramTestProject.Jobs
                     }
 
                     await _store.SaveLastCheckedAsync(lastChecked.Value);
+                    _logger.LogInformation($"Записана дата последней проверки: {lastChecked.Value}");
                 }
 
             }
