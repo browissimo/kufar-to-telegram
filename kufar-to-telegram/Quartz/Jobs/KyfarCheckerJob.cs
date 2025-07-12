@@ -39,6 +39,20 @@ namespace TelegramTestProject.Jobs
 
                 var newAds = allAds
                     .Where(ad => ad.ListTime > lastChecked)
+                    .Where(ad =>
+                    {
+                        if (string.IsNullOrEmpty(ad.BodyShort))
+                        {
+                            return true;
+                        }
+
+                        var lowerBody = ad.BodyShort.ToLower();
+                        return !lowerBody.Contains("континенталь") &&
+                               !lowerBody.Contains("рассрочка") &&
+                               !lowerBody.Contains("кредит") &&
+                               !lowerBody.Contains("многофункциональные") &&
+                               !lowerBody.Contains("бизнес-апартаменты");
+                    })
                     .OrderByDescending(ad => ad.ListTime)
                     .ToList();
 
